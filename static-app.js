@@ -4,12 +4,13 @@
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'qwen/qwen3-coder:free';
 
-// Override the fetch call handler for GitHub Pages deployment
-window.addEventListener('load', function() {
+// Remove any existing event listeners when the page loads
+document.addEventListener('DOMContentLoaded', function() {
   const chatForm = document.getElementById('chatForm');
   if (chatForm) {
-    chatForm.removeEventListener('submit', chatForm.onsubmit);
-    chatForm.addEventListener('submit', handleStaticSubmit);
+    const clonedForm = chatForm.cloneNode(true);
+    chatForm.parentNode.replaceChild(clonedForm, chatForm);
+    clonedForm.addEventListener('submit', handleStaticSubmit);
   }
 });
 
@@ -46,7 +47,7 @@ async function handleStaticSubmit(e) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://muhammadshayan593.github.io/Chat-Bot/',
+        'HTTP-Referer': 'https://muhammadshayan593.github.io',
         'X-Title': 'AI Chat Assistant'
       },
       body: JSON.stringify({
