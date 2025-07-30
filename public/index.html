@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Chat Assistant</title>
+  <link rel="stylesheet" href="/css/output.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Add highlight.js for code syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <!-- Add additional languages -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/cpp.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/csharp.min.js"></script>
+  <!-- Include static-app.js only when deployed on GitHub Pages -->
+  <script>
+    // Only load static-app.js if not running on localhost
+    if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+      const script = document.createElement('script');
+      script.src = 'static-app.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-br from-primary-50 to-primary-100 min-h-screen flex flex-col">
+  <header class="bg-white shadow-sm py-3 sm:py-4">
+    <div class="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
+      <div class="flex items-center space-x-2">
+        <i class="fas fa-robot text-primary-600 text-xl sm:text-2xl"></i>
+        <h1 class="text-lg sm:text-xl font-bold text-primary-800">AI Coding Assistant</h1>
+      </div>
+      <div class="text-xs sm:text-sm text-gray-500">Powered by OpenRouter API with Qwen3-coder</div>
+    </div>
+  </header>
+
+  <main class="flex-1 container mx-auto px-3 sm:px-4 py-3 sm:py-8 flex flex-col items-center justify-center">
+    <div class="w-full max-w-3xl bg-white rounded-lg sm:rounded-xl shadow-md sm:shadow-lg overflow-hidden">
+      <div class="p-3 sm:p-6 bg-primary-700 text-white">
+        <h2 class="text-lg sm:text-2xl font-semibold">AI Chat Assistant</h2>
+        <p class="text-primary-100 mt-1 text-xs sm:text-base">Ask me anything and I'll try to help!</p>
+      </div>
+      
+      <div id="chatContainer" class="p-2 sm:p-6 max-h-[60vh] sm:max-h-96 overflow-y-auto bg-gray-50">
+        <div class="space-y-3 sm:space-y-4">
+          <div class="flex items-start">
+            <div class="flex-shrink-0 bg-primary-600 rounded-full p-1.5 sm:p-2">
+              <i class="fas fa-robot text-white text-sm sm:text-base"></i>
+            </div>
+            <div class="ml-2 sm:ml-3 bg-primary-100 rounded-lg py-2 sm:py-3 px-3 sm:px-4 max-w-[75%] sm:max-w-3/4">
+              <p class="text-gray-800 text-sm sm:text-base">Hello! I'm your AI assistant. How can I help you today?</p>
+            </div>
+          </div>
+          <!-- Chat messages will be added here dynamically -->
+        </div>
+      </div>
+      
+      <form id="chatForm" class="p-2 sm:p-4 border-t border-gray-200 bg-white">
+        <div class="flex flex-col sm:flex-row gap-2 sm:space-x-2">
+          <input
+            type="text"
+            id="userInput"
+            class="flex-1 border border-gray-300 rounded-lg py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="Type your message here..."
+            required
+          />
+          <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-3 sm:px-6 py-2 sm:py-3 transition-colors duration-200 flex items-center justify-center text-sm sm:text-base">
+            <span>Send</span>
+            <i class="fas fa-paper-plane ml-2 text-xs sm:text-sm"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="bg-white py-2 sm:py-4 border-t border-gray-200">
+    <div class="container mx-auto px-4 text-center text-gray-500 text-xs sm:text-sm">
+      &copy; 2023 AI Coding Assistant. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    const chatContainer = document.getElementById('chatContainer');
+    const chatForm = document.getElementById('chatForm');
+    const userInput = document.getElementById('userInput');
+    
+    // Function to detect and format code blocks in text
+    function formatCodeBlocks(text) {
+      // Check if the text contains code blocks with language specification
+      const codeBlockRegex = /```([a-zA-Z0-9]+)\n([\s\S]*?)```/g;
+      let formattedText = text;
+      let match;
+      
+      // Replace code blocks with properly formatted HTML
+      while ((match = codeBlockRegex.exec(text)) !== null) {
+        const language = match[1];
+        const code = match[2].trim();
+        const formattedCode = `<pre><code class="language-${language}">${escapeHtml(code)}</code></pre>`;
+        formattedText = formattedText.replace(match[0], formattedCode);
+      }
+      
+      // Check for code blocks without language specification
+      const simpleCodeBlockRegex = /```([\s\S]*?)```/g;
+      while ((match = simpleCodeBlockRegex.exec(formattedText)) !== null) {
+        const code = match[1].trim();
+        const formattedCode = `<pre><code>${escapeHtml(code)}</code></pre>`;
+        formattedText = formattedText.replace(match[0], formattedCode);
+      }
+      
+      // Format inline code (text between backticks)
+      const inlineCodeRegex = /`([^`]+)`/g;
+      formattedText = formattedText.replace(inlineCodeRegex, '<code class="inline-code">$1</code>');
+      
+      return formattedText;
+    }
+    
+    // Helper function to escape HTML special characters
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+    
+    // Function to add a user message to the chat
+    function addUserMessage(content) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'flex items-start mt-3 sm:mt-4';
+      
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'flex-shrink-0 bg-gray-300 rounded-full p-1.5 sm:p-2';
+      
+      const icon = document.createElement('i');
+      icon.className = 'fas fa-user text-white text-sm sm:text-base';
+      
+      const textDiv = document.createElement('div');
+      textDiv.className = 'ml-2 sm:ml-3 bg-white border border-gray-200 rounded-lg py-2 sm:py-3 px-3 sm:px-4 max-w-[75%] sm:max-w-3/4';
+      
+      const text = document.createElement('p');
+      text.className = 'text-gray-800 text-sm sm:text-base';
+      text.textContent = content;
+      
+      iconDiv.appendChild(icon);
+      textDiv.appendChild(text);
+      messageDiv.appendChild(iconDiv);
+      messageDiv.appendChild(textDiv);
+      
+      chatContainer.querySelector('.space-y-3, .space-y-4').appendChild(messageDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+    
+    // Function to create and return an AI message container (without content yet)
+    function createAIMessageContainer() {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'flex items-start mt-3 sm:mt-4';
+      
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'flex-shrink-0 bg-primary-600 rounded-full p-1.5 sm:p-2';
+      
+      const icon = document.createElement('i');
+      icon.className = 'fas fa-robot text-white text-sm sm:text-base';
+      
+      const textDiv = document.createElement('div');
+      textDiv.className = 'ml-2 sm:ml-3 bg-primary-100 rounded-lg py-2 sm:py-3 px-3 sm:px-4 max-w-[75%] sm:max-w-3/4';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'text-gray-800 message-content text-sm sm:text-base';
+      
+      iconDiv.appendChild(icon);
+      textDiv.appendChild(contentDiv);
+      messageDiv.appendChild(iconDiv);
+      messageDiv.appendChild(textDiv);
+      
+      chatContainer.querySelector('.space-y-3, .space-y-4').appendChild(messageDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      
+      return contentDiv;
+    }
+    
+    // Function to simulate typing effect for AI responses
+    async function typeMessage(container, message, speed = 10) {
+      // First check if the message contains code blocks and format them
+      const formattedMessage = formatCodeBlocks(message);
+      
+      // If the message contains HTML (from code formatting), use innerHTML
+      if (formattedMessage !== message) {
+        // For messages with code blocks, we'll render it all at once but still animate
+        // the appearance with a fade-in effect
+        container.innerHTML = formattedMessage;
+        container.style.opacity = 0;
+        
+        // Apply syntax highlighting to all code blocks
+        container.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightElement(block);
+        });
+        
+        // Animate the fade-in
+        let opacity = 0;
+        const fadeIn = setInterval(() => {
+          if (opacity >= 1) {
+            clearInterval(fadeIn);
+          } else {
+            opacity += 0.05;
+            container.style.opacity = opacity;
+          }
+        }, 50);
+      } else {
+        // For regular text without code, type it character by character
+        let i = 0;
+        const interval = setInterval(() => {
+          if (i < message.length) {
+            container.textContent += message.charAt(i);
+            i++;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          } else {
+            clearInterval(interval);
+          }
+        }, speed);
+      }
+    }
+    
+    // Handle form submission
+    chatForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const message = userInput.value.trim();
+      
+      if (!message) return;
+      
+      // Add user message to chat
+      addUserMessage(message);
+      
+      // Clear input
+      userInput.value = '';
+      
+      // Show loading indicator
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'flex items-start mt-3 sm:mt-4 loading-message';
+      loadingDiv.innerHTML = `
+        <div class="flex-shrink-0 bg-primary-600 rounded-full p-1.5 sm:p-2">
+          <i class="fas fa-robot text-white text-sm sm:text-base"></i>
+        </div>
+        <div class="ml-2 sm:ml-3 bg-primary-100 rounded-lg py-2 sm:py-3 px-3 sm:px-4 max-w-[75%] sm:max-w-3/4">
+          <p class="text-gray-800 text-sm sm:text-base">Thinking<span class="dot-typing"></span></p>
+        </div>
+      `;
+      
+      // Try to find the messages container, with fallbacks
+      const messagesContainer = chatContainer.querySelector('.space-y-3, .space-y-4') || 
+                               chatContainer.querySelector('.space-y-3') || 
+                               chatContainer.querySelector('.space-y-4');
+      
+      // If we found a container, append to it, otherwise append directly to chat container
+      if (messagesContainer) {
+        messagesContainer.appendChild(loadingDiv);
+      } else {
+        console.warn('Messages container not found, appending directly to chat container');
+        chatContainer.appendChild(loadingDiv);
+      }
+      
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      
+      try {
+        // Send message to server
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message }),
+        });
+        
+        const data = await response.json();
+        
+        // Remove loading indicator
+        const loadingMessage = document.querySelector('.loading-message');
+        if (loadingMessage) {
+          loadingMessage.remove();
+        }
+        
+        // Create AI message container
+        const messageContainer = createAIMessageContainer();
+        
+        // Type out the AI response with a typing effect
+        await typeMessage(messageContainer, data.reply);
+      } catch (error) {
+        console.error('Error:', error);
+        // Remove loading indicator
+        const loadingMessage = document.querySelector('.loading-message');
+        if (loadingMessage) {
+          loadingMessage.remove();
+        }
+        // Add error message
+        const messageContainer = createAIMessageContainer();
+        typeMessage(messageContainer, 'Sorry, there was an error processing your request. Please try again.');
+      }
+    });
+    
+    // Focus input on page load
+    userInput.focus();
+  </script>
+  
+  <style>
+    .dot-typing {
+      position: relative;
+      padding-left: 5px;
+    }
+    
+    .dot-typing::after {
+      content: '...';
+      animation: dotTyping 1.5s infinite;
+      display: inline-block;
+      width: 20px;
+      text-align: left;
+    }
+    
+    @keyframes dotTyping {
+      0% { content: '.'; }
+      25% { content: '..'; }
+      50% { content: '...'; }
+      75% { content: ''; }
+    }
+  </style>
+</body>
+</html>

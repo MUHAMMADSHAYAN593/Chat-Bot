@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for code formatting */
+.inline-code {
+  background-color: #f1f1f1;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+  padding: 2px 4px;
+  font-size: 0.9em;
+}
+
+pre {
+  margin: 1em 0;
+  border-radius: 6px;
+  background-color: #282c34;
+  overflow-x: auto;
+}
+
+pre code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  padding: 1em;
+  display: block;
+}
+
+/* Typing animation */
+.dot-typing {
+  position: relative;
+  padding-left: 0.5em;
+}
+
+.dot-typing::after {
+  content: '...';
+  animation: dotTyping 1.5s infinite;
+  display: inline-block;
+  width: 1.5em;
+  text-align: left;
+}
+
+@keyframes dotTyping {
+  0% { content: '.'; }
+  25% { content: '..'; }
+  50% { content: '...'; }
+  75% { content: ''; }
+}
