@@ -3,6 +3,7 @@
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'qwen/qwen3-coder:free';
+const DEFAULT_API_KEY = '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';
 
 // Remove any existing event listeners when the page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -87,7 +88,12 @@ async function handleStaticSubmit(e) {
 
 // Function to get API key from URL parameters or modal dialog
 async function getApiKey() {
-  // Check if API key is in URL parameters
+  // First try to use the default API key
+  if (DEFAULT_API_KEY) {
+    return DEFAULT_API_KEY;
+  }
+
+  // If no default key, check URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   let apiKey = urlParams.get('api_key');
   
