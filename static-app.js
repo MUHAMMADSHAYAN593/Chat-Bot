@@ -43,27 +43,37 @@ async function handleStaticSubmit(e) {
     const apiKey = await getApiKey();
     if (!apiKey) throw new Error('API key is required');
 
+    console.log('Sending request with API key:', apiKey);
     const response = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://muhammadshayan593.github.io',
-        'X-Title': 'AI Chat Assistant'
+        'HTTP-Referer': 'https://muhammadshayan593.github.io/Chat-Bot',
+        'X-Title': 'AI Chat Assistant',
+        'Origin': 'https://muhammadshayan593.github.io'
       },
       body: JSON.stringify({
         model: MODEL,
         messages: [{ role: 'user', content: message }],
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: 1000,
+        stream: false
       })
     });
 
+    const data = await response.json();
+    console.log('API Response:', data);
+    
     if (!response.ok) {
-      throw new Error('API request failed');
+      throw new Error(data.error?.message || 'API request failed');
     }
 
-    const data = await response.json();
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Unexpected API response structure:', data);
+      throw new Error('Invalid response from API');
+    }
+
     const reply = data.choices[0].message.content;
 
     // Remove loading
@@ -74,14 +84,21 @@ async function handleStaticSubmit(e) {
     const messageContainer = createAIMessageContainer();
     await typeMessage(messageContainer, reply);
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Detailed Error:', error);
     const loadingMessage = document.querySelector('.loading-message');
     if (loadingMessage) loadingMessage.remove();
     
     const messageContainer = createAIMessageContainer();
-    const errorMessage = error.message === 'API key is required' 
-      ? 'Please provide a valid OpenRouter API key to continue.'
-      : 'Sorry, there was an error processing your request. Please try again.';
+    let errorMessage;
+    
+    if (error.message === 'API key is required') {
+      errorMessage = 'Please provide a valid OpenRouter API key to continue.';
+    } else if (error.message.includes('Failed to fetch')) {
+      errorMessage = 'Network error: Please check your internet connection.';
+    } else {
+      errorMessage = `Error: ${error.message}. Please try again or check the console for more details.`;
+    }
+    
     typeMessage(messageContainer, errorMessage);
   }
 }
