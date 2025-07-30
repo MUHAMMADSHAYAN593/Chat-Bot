@@ -4,6 +4,86 @@
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'qwen/qwen3-coder:free';
 
+// Override the fetch call handler for GitHub Pages deployment
+window.addEventListener('load', function() {
+  const chatForm = document.getElementById('chatForm');
+  if (chatForm) {
+    chatForm.removeEventListener('submit', chatForm.onsubmit);
+    chatForm.addEventListener('submit', handleStaticSubmit);
+  }
+});
+
+async function handleStaticSubmit(e) {
+  e.preventDefault();
+  const message = userInput.value.trim();
+  if (!message) return;
+
+  // Add user message
+  addUserMessage(message);
+  userInput.value = '';
+
+  // Show loading
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'flex items-start mt-3 sm:mt-4 loading-message';
+  loadingDiv.innerHTML = `
+    <div class="flex-shrink-0 bg-primary-600 rounded-full p-1.5 sm:p-2">
+      <i class="fas fa-robot text-white text-sm sm:text-base"></i>
+    </div>
+    <div class="ml-2 sm:ml-3 bg-primary-100 rounded-lg py-2 sm:py-3 px-3 sm:px-4 max-w-[75%] sm:max-w-3/4">
+      <p class="text-gray-800 text-sm sm:text-base">Thinking<span class="dot-typing"></span></p>
+    </div>
+  `;
+  
+  chatContainer.querySelector('.space-y-3, .space-y-4').appendChild(loadingDiv);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+
+  try {
+    const apiKey = await getApiKey();
+    if (!apiKey) throw new Error('API key is required');
+
+    const response = await fetch(OPENROUTER_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://muhammadshayan593.github.io/Chat-Bot/',
+        'X-Title': 'AI Chat Assistant'
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{ role: 'user', content: message }],
+        temperature: 0.7,
+        max_tokens: 1000
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('API request failed');
+    }
+
+    const data = await response.json();
+    const reply = data.choices[0].message.content;
+
+    // Remove loading
+    const loadingMessage = document.querySelector('.loading-message');
+    if (loadingMessage) loadingMessage.remove();
+
+    // Show AI response
+    const messageContainer = createAIMessageContainer();
+    await typeMessage(messageContainer, reply);
+  } catch (error) {
+    console.error('Error:', error);
+    const loadingMessage = document.querySelector('.loading-message');
+    if (loadingMessage) loadingMessage.remove();
+    
+    const messageContainer = createAIMessageContainer();
+    const errorMessage = error.message === 'API key is required' 
+      ? 'Please provide a valid OpenRouter API key to continue.'
+      : 'Sorry, there was an error processing your request. Please try again.';
+    typeMessage(messageContainer, errorMessage);
+  }
+}
+
 // Function to get API key from URL parameters or modal dialog
 async function getApiKey() {
   // Check if API key is in URL parameters

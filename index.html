@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Chat Assistant</title>
-  <link rel="stylesheet" href="/Chat-Bot/src/output.css">
+  <link rel="stylesheet" href="/src/output.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -18,8 +18,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/java.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/cpp.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/csharp.min.js"></script>
-  <!-- Server will handle the API calls -->
-  <!-- No static-app.js needed when running with server -->
+  <!-- Load static-app.js for GitHub Pages, use server for local development -->
+  <script>
+    if (window.location.hostname === 'muhammadshayan593.github.io') {
+      const script = document.createElement('script');
+      script.src = '/Chat-Bot/static-app.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  </script>
 </head>
 <body class="bg-gradient-to-br from-primary-50 to-primary-100 min-h-screen flex flex-col">
   <header class="bg-white shadow-sm py-3 sm:py-4">

@@ -24,7 +24,7 @@ const MODEL = 'qwen/qwen3-coder:free';
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
-app.use('/css', express.static(join(__dirname, 'src')));
+app.use('/src', express.static(join(__dirname, 'src')));
 
 // Chat API endpoint
 app.post('/api/chat', async (req, res) => {
