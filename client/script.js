@@ -1,5 +1,7 @@
 // Configuration
-const API_URL = 'http://localhost:3000/api/chat'; // Change this to your deployed backend URL
+const API_URL = 'https://fbed989d-bdf6-4bbe-810d-7f10fc77d95f-00-1a06zimt2ttmt.pike.replit.dev/api/chat';
+const MODEL = 'qwen/qwen3-30b-a3b-instruct-2507';
+const DEFAULT_API_KEY = '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';
 
 // Initialize conversation history
 let conversationHistory = [];
