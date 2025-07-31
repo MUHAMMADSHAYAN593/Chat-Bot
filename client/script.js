@@ -1,7 +1,5 @@
 // Configuration
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'openai/gpt-3.5-turbo';
-const DEFAULT_API_KEY = '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';
+const API_URL = 'http://localhost:3000/api/chat'; // Change this to your deployed backend URL
 
 // Initialize conversation history
 let conversationHistory = [];
@@ -150,24 +148,12 @@ async function handleChat(message) {
     messagesContainer.appendChild(loadingDiv);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 
-    const response = await fetch(OPENROUTER_API_URL, {
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEFAULT_API_KEY}`,
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'AI Chat Assistant'
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: 'system', content: 'You are a helpful AI assistant.' },
-          ...conversationHistory,
-          { role: 'user', content: message }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      })
+      body: JSON.stringify({ message })
     });
 
     const data = await response.json();
@@ -177,7 +163,7 @@ async function handleChat(message) {
       throw new Error(data.error?.message || 'API request failed');
     }
 
-    const reply = data.choices[0]?.message?.content;
+    const reply = data.reply;
     if (!reply) throw new Error('Invalid response from API');
 
     conversationHistory.push(
@@ -198,10 +184,7 @@ async function handleChat(message) {
     }
     
     const messageContainer = createAIMessageContainer();
-    const errorMessage = error.message.includes('401')
-      ? 'Authentication failed. Please check your API key.'
-      : 'Sorry, there was an error. Please try again.';
-    await typeMessage(messageContainer, errorMessage);
+    await typeMessage(messageContainer, 'Sorry, there was an error. Please try again.');
   }
 }
 
@@ -246,13 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const message = input.value.trim();
     if (message) {
       input.value = '';
-      handleChat(message).catch(error => {
-        console.error('Chat error:', error);
-        const messageContainer = createAIMessageContainer();
-        if (messageContainer) {
-          typeMessage(messageContainer, 'Sorry, there was an error. Please try again.');
-        }
-      });
+      handleChat(message);
     }
   });
 
